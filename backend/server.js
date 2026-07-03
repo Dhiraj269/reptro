@@ -8,22 +8,8 @@ connectDB();
 
 const app = express();
 
-// CORS - Allow production and development
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://reptro.in',
-  'https://www.reptro.in',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',
   credentials: true
 }));
 
@@ -31,7 +17,6 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Health check
 app.get('/', (req, res) => {
   res.json({ status: 'Reptro API is running!', version: '1.0.0' });
 });
@@ -40,31 +25,61 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/products', require('./routes/products'));
-app.use('/api/categories', require('./routes/categories'));
-app.use('/api/orders', require('./routes/orders'));
-app.use('/api/locations', require('./routes/locations'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/upload', require('./routes/upload'));
-app.use('/api/reptrofresh', require('./routes/reptrofresh'));
-// TEMPORARY - REMOVE AFTER SEEDING
+// Load routes with error handling
+try {
+  app.use('/api/auth', require('./routes/auth'));
+  console.log('✅ Auth routes loaded');
+} catch(e) { console.log('❌ Auth routes error:', e.message); }
+
+try {
+  app.use('/api/products', require('./routes/products'));
+  console.log('✅ Products routes loaded');
+} catch(e) { console.log('❌ Products routes error:', e.message); }
+
+try {
+  app.use('/api/categories', require('./routes/categories'));
+  console.log('✅ Categories routes loaded');
+} catch(e) { console.log('❌ Categories routes error:', e.message); }
+
+try {
+  app.use('/api/orders', require('./routes/orders'));
+  console.log('✅ Orders routes loaded');
+} catch(e) { console.log('❌ Orders routes error:', e.message); }
+
+try {
+  app.use('/api/locations', require('./routes/locations'));
+  console.log('✅ Locations routes loaded');
+} catch(e) { console.log('❌ Locations routes error:', e.message); }
+
+try {
+  app.use('/api/admin', require('./routes/admin'));
+  console.log('✅ Admin routes loaded');
+} catch(e) { console.log('❌ Admin routes error:', e.message); }
+
+try {
+  app.use('/api/upload', require('./routes/upload'));
+  console.log('✅ Upload routes loaded');
+} catch(e) { console.log('❌ Upload routes error:', e.message); }
+
+try {
+  app.use('/api/reptrofresh', require('./routes/reptrofresh'));
+  console.log('✅ ReptroFresh routes loaded');
+} catch(e) { console.log('❌ ReptroFresh routes error:', e.message); }
+
+// Seed route
 app.get('/api/seed-database-secret-2024', async (req, res) => {
   try {
     const seedData = require('./seed');
     await seedData();
-    res.json({
-      success: true,
-      message: 'Database seeded successfully!',
-      admin: {
-        email: 'admin@reptro.in',
-        password: 'Reptro@Admin2024'
-      }
-    });
+    res.json({ success: true, message: 'Database seeded!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found', path: req.path });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('🚀 Server running on port ' + PORT));
