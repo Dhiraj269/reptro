@@ -1,0 +1,25 @@
+# Reptro Robots.txt
+User-agent: *
+Allow: /
+Allow: /category/
+Allow: /product/
+
+Disallow: /admin
+Disallow: /api/
+Disallow: /uploads/private/
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://reptro.in/sitemap.xml
+
+# Google Bot
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+
+# Bing Bot
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
