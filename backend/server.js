@@ -49,5 +49,22 @@ app.use('/api/locations', require('./routes/locations'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/reptrofresh', require('./routes/reptrofresh'));
+// TEMPORARY - REMOVE AFTER SEEDING
+app.get('/api/seed-database-secret-2024', async (req, res) => {
+  try {
+    const seedData = require('./seed');
+    await seedData();
+    res.json({
+      success: true,
+      message: 'Database seeded successfully!',
+      admin: {
+        email: 'admin@reptro.in',
+        password: 'Reptro@Admin2024'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('🚀 Server running on port ' + PORT));
