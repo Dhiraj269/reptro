@@ -60,7 +60,9 @@ export const getWhatsAppURL = (message = '') => {
 
 export const getImageURL = (path) => {
   if (!path) return null;
+  // If already full URL (Cloudinary), return as-is
   if (path.startsWith('http')) return path;
+  // Legacy local URLs
   const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
   const BASE_URL = API_BASE.replace('/api', '');
   return BASE_URL + path;

@@ -401,7 +401,13 @@ const handleToggleCategory = async (id) => {
                 <div className="form-group">
                   <label>Image</label>
                   <input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'fresh')} />
-                  {freshForm.image && <img src={'http://localhost:5000' + freshForm.image} alt="" className="image-preview" />}
+                  {freshForm.image && (
+  <img 
+    src={freshForm.image.startsWith('http') ? freshForm.image : 'http://localhost:5000' + freshForm.image} 
+    alt="Preview" 
+    className="image-preview" 
+  />
+)}
                 </div>
 
                 {/* PRICING SECTION */}
@@ -548,7 +554,13 @@ const handleToggleCategory = async (id) => {
                   <div className="form-group"><label>Tags (comma sep)</label><input type="text" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} /></div>
                 </div>
                 <div className="form-group" style={{ marginTop: 16 }}><label>Description</label><input type="text" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-                <div className="form-group"><label>Image</label><input type="file" accept="image/*" onChange={e => handleImageUpload(e)} />{form.image && <img src={'http://localhost:5000' + form.image} alt="" className="image-preview" />}</div>
+                <div className="form-group"><label>Image</label><input type="file" accept="image/*" onChange={e => handleImageUpload(e)} />{form.image && (
+  <img 
+    src={form.image.startsWith('http') ? form.image : 'http://localhost:5000' + form.image} 
+    alt="Preview" 
+    className="image-preview" 
+  />
+)}</div>
                 <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
                   {['isFeatured', 'isFlashSale'].map(f => <label key={f} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}><input type="checkbox" checked={form[f]} onChange={e => setForm({ ...form, [f]: e.target.checked })} />{f.replace('is', '')}</label>)}
                 </div>
