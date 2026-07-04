@@ -69,6 +69,20 @@ app.get('/api/seed-database-secret-2024', async (req, res) => {
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found', path: req.path });
 });
-
+// TEMPORARY - Test Cloudinary Configuration
+app.get('/api/test-cloudinary', (req, res) => {
+  res.json({
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME 
+      ? '✅ Set: ' + process.env.CLOUDINARY_CLOUD_NAME 
+      : '❌ MISSING',
+    apiKey: process.env.CLOUDINARY_API_KEY 
+      ? '✅ Set: ' + process.env.CLOUDINARY_API_KEY.substring(0, 5) + '...' 
+      : '❌ MISSING',
+    apiSecret: process.env.CLOUDINARY_API_SECRET 
+      ? '✅ Set (hidden for security)' 
+      : '❌ MISSING',
+    message: 'If all 3 are ✅ Set, Cloudinary is configured properly'
+  });
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('🚀 Server running on port ' + PORT));
