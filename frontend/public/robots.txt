@@ -1,10 +1,27 @@
-# Reptro Robots.txt - Allow all crawlers
+# Reptro Robots.txt
 
 User-agent: *
 Allow: /
+Allow: /category/
+Allow: /product/
+
+# Only disallow admin routes
+Disallow: /admin
+Disallow: /admin-login
 
 # Sitemap
 Sitemap: https://reptro.in/sitemap.xml
 
-# Crawl delay (optional - be nice to crawlers)
+# Crawl delay
 Crawl-delay: 1
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /admin-login
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /admin-login
