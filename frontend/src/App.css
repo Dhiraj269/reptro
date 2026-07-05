@@ -3554,3 +3554,88 @@ bar-logo {
     margin-bottom: 6px;
   }
 }
+/* ==========================================
+   SIZE SELECTOR ON PRODUCT CARD
+   ========================================== */
+
+.size-selector {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.size-btn {
+  position: relative;
+  padding: 4px 10px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  text-align: center;
+}
+
+.size-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #fff7ed;
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.size-btn-active {
+  background: var(--accent) !important;
+  color: #fff !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 2px 6px rgba(232, 123, 53, 0.35);
+}
+
+.size-btn-disabled {
+  background: #f9fafb !important;
+  color: #9ca3af !important;
+  border-color: #e5e7eb !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.size-btn-disabled:hover {
+  transform: none !important;
+  background: #f9fafb !important;
+  color: #9ca3af !important;
+}
+
+.size-out-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 900;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #fff;
+}
+
+@media (max-width: 480px) {
+  .size-btn {
+    padding: 3px 8px;
+    font-size: 9px;
+    min-width: 28px;
+  }
+  
+  .size-out-badge {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+  }
+}

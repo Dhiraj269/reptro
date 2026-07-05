@@ -1,23 +1,39 @@
-import React, { useState } from 'react';
-import { FiX, FiShoppingCart, FiPlus, FiMinus } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiX, FiShoppingCart } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { getImageURL } from '../utils/helpers';
 import toast from 'react-hot-toast';
 
 const ProductModal = ({ product, onClose }) => {
-  const [selectedVariant, setSelectedVariant] = useState(0);
+  // Auto-select first available variant
+  const getInitialVariantIndex = () => {
+    if (!product.variants || product.variants.length === 0) return 0;
+    const availableIndex = product.variants.findIndex(v => (v.stock || 0) > 0);
+    return availableIndex >= 0 ? availableIndex : 0;
+  };
+
+  const [selectedVariant, setSelectedVariant] = useState(getInitialVariantIndex());
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
+  
+  useEffect(() => {
+    setSelectedVariant(getInitialVariantIndex());
+    setQuantity(1);
+  }, [product]);
   
   if (!product) return null;
   const variant = product.variants[selectedVariant];
   const stock = variant.stock || 0;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
+  
+  // Check if any variant has stock
+  const hasAnyStock = product.variants.some(v => (v.stock || 0) > 0);
+  const availableCount = product.variants.filter(v => (v.stock || 0) > 0).length;
 
   const handleAdd = () => {
     if (isOutOfStock) {
-      toast.error('This item is out of stock!');
+      toast.error('This size is out of stock! Please select another size.');
       return;
     }
     if (quantity > stock) {
@@ -25,7 +41,7 @@ const ProductModal = ({ product, onClose }) => {
       return;
     }
     addToCart(product, variant, quantity);
-    toast.success(product.name + ' added to cart!');
+    toast.success(product.name + ' (' + variant.size + ') added to cart!');
     onClose();
   };
 
@@ -35,6 +51,16 @@ const ProductModal = ({ product, onClose }) => {
     } else {
       toast.error(`Only ${stock} items available!`);
     }
+  };
+
+  const handleVariantSelect = (index) => {
+    const v = product.variants[index];
+    if ((v.stock || 0) === 0) {
+      toast.error('This size is out of stock!');
+      return;
+    }
+    setSelectedVariant(index);
+    setQuantity(1);
   };
 
   return (
@@ -48,7 +74,7 @@ const ProductModal = ({ product, onClose }) => {
           ) : (
             <span style={{ fontSize: 64 }}>📦</span>
           )}
-          {isOutOfStock && (
+          {!hasAnyStock && (
             <div className="out-of-stock-overlay">
               <span className="out-of-stock-text">OUT OF STOCK</span>
             </div>
@@ -58,20 +84,41 @@ const ProductModal = ({ product, onClose }) => {
         <h3 className="product-modal-name">{product.name}</h3>
         {product.shopOwner && <p className="product-modal-shop">by {product.shopOwner}</p>}
 
-        {/* STOCK STATUS */}
+        {/* Stock Summary */}
+        {product.variants.length > 1 && (
+          <div style={{
+            padding: '8px 12px',
+            background: hasAnyStock ? '#f0fdf4' : '#fee2e2',
+            border: `1px solid ${hasAnyStock ? '#86efac' : '#fecaca'}`,
+            borderRadius: 8,
+            marginBottom: 12,
+            fontSize: 12,
+            fontWeight: 600,
+            color: hasAnyStock ? '#065f46' : '#991b1b',
+            textAlign: 'center'
+          }}>
+            {hasAnyStock ? (
+              <>📦 {availableCount} of {product.variants.length} sizes available</>
+            ) : (
+              <>❌ All sizes currently out of stock</>
+            )}
+          </div>
+        )}
+
+        {/* Current Selected Variant Stock Status */}
         <div style={{ marginBottom: 12 }}>
           {isOutOfStock ? (
             <div style={{
-              background: '#fee2e2',
-              color: '#991b1b',
-              padding: '8px 12px',
+              background: '#fef3c7',
+              color: '#78350f',
+              padding: '10px 12px',
               borderRadius: 8,
               fontSize: 13,
               fontWeight: 700,
               textAlign: 'center',
-              border: '1px solid #fecaca'
+              border: '1px solid #fcd34d'
             }}>
-              ❌ Currently Out of Stock
+              ⚠️ {variant.size} is out of stock. Please select an available size below.
             </div>
           ) : isLowStock ? (
             <div style={{
@@ -84,7 +131,7 @@ const ProductModal = ({ product, onClose }) => {
               textAlign: 'center',
               border: '1px solid #fcd34d'
             }}>
-              ⚠️ Hurry! Only {stock} items left
+              ⚠️ Hurry! Only {stock} items left in {variant.size}
             </div>
           ) : (
             <div style={{
@@ -97,7 +144,7 @@ const ProductModal = ({ product, onClose }) => {
               textAlign: 'center',
               border: '1px solid #86efac'
             }}>
-              ✅ In Stock ({stock} available)
+              ✅ {stock} items available in {variant.size}
             </div>
           )}
         </div>
@@ -108,15 +155,18 @@ const ProductModal = ({ product, onClose }) => {
             {product.variants.map((v, i) => {
               const vStock = v.stock || 0;
               const vOutOfStock = vStock === 0;
+              const vLowStock = vStock > 0 && vStock <= 5;
+              const isSelected = i === selectedVariant;
+              
               return (
                 <div 
                   key={i} 
-                  className={'variant-item ' + (i === selectedVariant ? 'selected' : '') + (vOutOfStock ? ' variant-disabled' : '')} 
-                  onClick={() => !vOutOfStock && (setSelectedVariant(i), setQuantity(1))}
+                  className={`variant-item ${isSelected ? 'selected' : ''} ${vOutOfStock ? 'variant-disabled' : ''}`}
+                  onClick={() => handleVariantSelect(i)}
                   style={{ 
+                    position: 'relative',
                     opacity: vOutOfStock ? 0.5 : 1,
-                    cursor: vOutOfStock ? 'not-allowed' : 'pointer',
-                    position: 'relative'
+                    cursor: vOutOfStock ? 'not-allowed' : 'pointer'
                   }}
                 >
                   <div className="variant-size">{v.size}</div>
@@ -124,24 +174,49 @@ const ProductModal = ({ product, onClose }) => {
                   {v.originalPrice && v.originalPrice > v.price && (
                     <div className="variant-original-price">₹{v.originalPrice}</div>
                   )}
-                  {vOutOfStock && (
+                  
+                  {/* Stock badge for each variant */}
+                  {vOutOfStock ? (
                     <div style={{
-                      fontSize: 9,
-                      color: '#dc2626',
-                      fontWeight: 700,
-                      marginTop: 2
+                      background: '#dc2626',
+                      color: '#fff',
+                      fontSize: 8,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: 3,
+                      marginTop: 4,
+                      textAlign: 'center',
+                      letterSpacing: 0.3
                     }}>
-                      Out of Stock
+                      OUT OF STOCK
                     </div>
-                  )}
-                  {!vOutOfStock && vStock <= 5 && (
+                  ) : vLowStock ? (
                     <div style={{
-                      fontSize: 9,
-                      color: '#d97706',
-                      fontWeight: 700,
-                      marginTop: 2
+                      background: '#f59e0b',
+                      color: '#fff',
+                      fontSize: 8,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: 3,
+                      marginTop: 4,
+                      textAlign: 'center',
+                      letterSpacing: 0.3
                     }}>
-                      Only {vStock} left
+                      ONLY {vStock} LEFT
+                    </div>
+                  ) : (
+                    <div style={{
+                      background: '#22c55e',
+                      color: '#fff',
+                      fontSize: 8,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: 3,
+                      marginTop: 4,
+                      textAlign: 'center',
+                      letterSpacing: 0.3
+                    }}>
+                      IN STOCK
                     </div>
                   )}
                 </div>
@@ -175,8 +250,17 @@ const ProductModal = ({ product, onClose }) => {
         </div>
         
         {isOutOfStock ? (
-          <button className="modal-add-btn" disabled style={{ background: '#9ca3af', cursor: 'not-allowed' }}>
-            ❌ Out of Stock
+          <button 
+            className="modal-add-btn" 
+            disabled 
+            style={{ 
+              background: '#f3f4f6', 
+              color: '#6b7280',
+              cursor: 'not-allowed',
+              border: '2px solid #d1d5db'
+            }}
+          >
+            ❌ {variant.size} Out of Stock
           </button>
         ) : (
           <button className="modal-add-btn" onClick={handleAdd}>
