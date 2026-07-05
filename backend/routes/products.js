@@ -6,19 +6,36 @@ const { admin } = require('../middleware/admin');
 
 router.get('/', async (req, res) => {
   try {
-    const { category, search, featured, sprout, fruit, flashsale, location } = req.query;
+    const { category, search, featured, sprout, fruit, flashsale, location, hideOutOfStock } = req.query;
     let query = { isAvailable: true };
+    
     if (category) query.category = category;
     if (featured === 'true') query.isFeatured = true;
     if (sprout === 'true') query.isSprout = true;
     if (fruit === 'true') query.isFruit = true;
     if (flashsale === 'true') query.isFlashSale = true;
+    
     if (search) {
       const searchRegex = new RegExp(search.split('').join('.*'), 'i');
-      query.$or = [{ name: searchRegex }, { tags: searchRegex }, { description: searchRegex }];
+      query.$or = [
+        { name: searchRegex }, 
+        { tags: searchRegex }, 
+        { description: searchRegex }
+      ];
     }
-    let products = await Product.find(query).populate('category', 'name slug icon subtitle').sort({ orderCount: -1, createdAt: -1 });
+    
+    let products = await Product.find(query)
+      .populate('category', 'name slug icon subtitle')
+      .sort({ orderCount: -1, createdAt: -1 });
 
+    // Filter out-of-stock if requested
+    if (hideOutOfStock === 'true') {
+      products = products.filter(p => 
+        p.variants.some(v => (v.stock || 0) > 0)
+      );
+    }
+
+    // Location based pricing
     if (location) {
       products = products.map(p => {
         const prod = p.toObject();
@@ -35,7 +52,9 @@ router.get('/', async (req, res) => {
     }
 
     res.json(products);
-  } catch (error) { res.status(500).json({ message: error.message }); }
+  } catch (error) { 
+    res.status(500).json({ message: error.message }); 
+  }
 });
 
 router.get('/popular', async (req, res) => {

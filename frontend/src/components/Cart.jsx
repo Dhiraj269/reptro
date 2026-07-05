@@ -87,6 +87,16 @@ const Cart = () => {
               <div className="cart-item-info">
                 <div className="cart-item-name">{item.name}</div>
                 <div className="cart-item-variant">{item.variant}</div>
+                {item.stock !== undefined && item.stock <= 5 && (
+  <div style={{ 
+    fontSize: 10, 
+    color: '#d97706', 
+    fontWeight: 700,
+    marginTop: 2 
+  }}>
+    ⚠️ Only {item.stock} left
+  </div>
+)}
                 <div className="cart-item-price">₹{item.price * item.quantity}</div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
