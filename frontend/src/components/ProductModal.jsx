@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FiX, FiShoppingCart } from 'react-icons/fi';
+import { FiX, FiShoppingCart, FiInfo } from 'react-icons/fi';
 import { useCart } from '../context/CartContext';
 import { getImageURL } from '../utils/helpers';
 import toast from 'react-hot-toast';
 
 const ProductModal = ({ product, onClose }) => {
-  // Auto-select first available variant
   const getInitialVariantIndex = () => {
     if (!product.variants || product.variants.length === 0) return 0;
     const availableIndex = product.variants.findIndex(v => (v.stock || 0) > 0);
@@ -26,14 +25,12 @@ const ProductModal = ({ product, onClose }) => {
   const stock = variant.stock || 0;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
-  
-  // Check if any variant has stock
   const hasAnyStock = product.variants.some(v => (v.stock || 0) > 0);
   const availableCount = product.variants.filter(v => (v.stock || 0) > 0).length;
 
   const handleAdd = () => {
     if (isOutOfStock) {
-      toast.error('This size is out of stock! Please select another size.');
+      toast.error('This size is out of stock!');
       return;
     }
     if (quantity > stock) {
@@ -46,11 +43,8 @@ const ProductModal = ({ product, onClose }) => {
   };
 
   const increaseQty = () => {
-    if (quantity < stock) {
-      setQuantity(quantity + 1);
-    } else {
-      toast.error(`Only ${stock} items available!`);
-    }
+    if (quantity < stock) setQuantity(quantity + 1);
+    else toast.error(`Only ${stock} items available!`);
   };
 
   const handleVariantSelect = (index) => {
@@ -84,6 +78,43 @@ const ProductModal = ({ product, onClose }) => {
         <h3 className="product-modal-name">{product.name}</h3>
         {product.shopOwner && <p className="product-modal-shop">by {product.shopOwner}</p>}
 
+        {/* CATEGORY BADGE */}
+        {product.category && (
+          <div style={{ marginBottom: 12 }}>
+            <span style={{
+              display: 'inline-block',
+              background: '#e0f2fe',
+              color: '#0369a1',
+              padding: '3px 10px',
+              borderRadius: 12,
+              fontSize: 11,
+              fontWeight: 700
+            }}>
+              {product.category.icon} {product.category.name}
+            </span>
+          </div>
+        )}
+
+        {/* PRODUCT DESCRIPTION - NEW! */}
+        {product.description && product.description.trim() && (
+          <div className="product-description-box">
+            <div className="description-header">
+              <FiInfo size={14} />
+              <span>Product Description</span>
+            </div>
+            <p className="description-text">{product.description}</p>
+          </div>
+        )}
+
+        {/* TAGS - NEW! */}
+        {product.tags && product.tags.length > 0 && (
+          <div className="product-tags-box">
+            {product.tags.map((tag, i) => (
+              <span key={i} className="product-tag-item">#{tag}</span>
+            ))}
+          </div>
+        )}
+
         {/* Stock Summary */}
         {product.variants.length > 1 && (
           <div style={{
@@ -105,7 +136,7 @@ const ProductModal = ({ product, onClose }) => {
           </div>
         )}
 
-        {/* Current Selected Variant Stock Status */}
+        {/* Current Variant Stock */}
         <div style={{ marginBottom: 12 }}>
           {isOutOfStock ? (
             <div style={{
@@ -118,7 +149,7 @@ const ProductModal = ({ product, onClose }) => {
               textAlign: 'center',
               border: '1px solid #fcd34d'
             }}>
-              ⚠️ {variant.size} is out of stock. Please select an available size below.
+              ⚠️ {variant.size} is out of stock
             </div>
           ) : isLowStock ? (
             <div style={{
@@ -131,7 +162,7 @@ const ProductModal = ({ product, onClose }) => {
               textAlign: 'center',
               border: '1px solid #fcd34d'
             }}>
-              ⚠️ Hurry! Only {stock} items left in {variant.size}
+              ⚠️ Only {stock} items left in {variant.size}
             </div>
           ) : (
             <div style={{
@@ -144,7 +175,7 @@ const ProductModal = ({ product, onClose }) => {
               textAlign: 'center',
               border: '1px solid #86efac'
             }}>
-              ✅ {stock} items available in {variant.size}
+              ✅ {stock} items in stock
             </div>
           )}
         </div>
@@ -174,8 +205,6 @@ const ProductModal = ({ product, onClose }) => {
                   {v.originalPrice && v.originalPrice > v.price && (
                     <div className="variant-original-price">₹{v.originalPrice}</div>
                   )}
-                  
-                  {/* Stock badge for each variant */}
                   {vOutOfStock ? (
                     <div style={{
                       background: '#dc2626',
@@ -185,8 +214,7 @@ const ProductModal = ({ product, onClose }) => {
                       padding: '2px 6px',
                       borderRadius: 3,
                       marginTop: 4,
-                      textAlign: 'center',
-                      letterSpacing: 0.3
+                      textAlign: 'center'
                     }}>
                       OUT OF STOCK
                     </div>
@@ -199,8 +227,7 @@ const ProductModal = ({ product, onClose }) => {
                       padding: '2px 6px',
                       borderRadius: 3,
                       marginTop: 4,
-                      textAlign: 'center',
-                      letterSpacing: 0.3
+                      textAlign: 'center'
                     }}>
                       ONLY {vStock} LEFT
                     </div>
@@ -213,8 +240,7 @@ const ProductModal = ({ product, onClose }) => {
                       padding: '2px 6px',
                       borderRadius: 3,
                       marginTop: 4,
-                      textAlign: 'center',
-                      letterSpacing: 0.3
+                      textAlign: 'center'
                     }}>
                       IN STOCK
                     </div>
@@ -232,17 +258,13 @@ const ProductModal = ({ product, onClose }) => {
               className="qty-btn" 
               onClick={() => setQuantity(Math.max(1, quantity - 1))}
               disabled={isOutOfStock}
-            >
-              −
-            </button>
+            >−</button>
             <span className="qty-display" style={{ padding: '0 16px' }}>{quantity}</span>
             <button 
               className="qty-btn" 
               onClick={increaseQty}
               disabled={isOutOfStock || quantity >= stock}
-            >
-              +
-            </button>
+            >+</button>
           </div>
           <span style={{ fontWeight: 800, fontSize: 18, color: 'var(--accent)', marginLeft: 'auto' }}>
             ₹{variant.price * quantity}

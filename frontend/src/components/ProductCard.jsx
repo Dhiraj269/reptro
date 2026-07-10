@@ -69,6 +69,15 @@ const ProductCard = ({ product, onClick }) => {
       
       <div className="product-info">
         <div className="product-name" onClick={onClick}>{product.name}</div>
+        <div className="product-name" onClick={onClick}>{product.name}</div>
+{product.shopOwner && <div className="product-shop">by {product.shopOwner}</div>}
+
+{/* SHORT DESCRIPTION - NEW! */}
+{product.description && product.description.trim() && (
+  <div className="product-short-desc" onClick={onClick}>
+    {product.description}
+  </div>
+)}
         {product.shopOwner && <div className="product-shop">by {product.shopOwner}</div>}
         
         {/* SIZE SELECTOR (Multiple variants) */}
