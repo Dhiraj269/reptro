@@ -6,14 +6,9 @@ import { getImageURL } from '../utils/helpers';
 const ProductCard = ({ product, onClick }) => {
   const { addToCart, getItemQuantity, updateQuantity } = useCart();
   
-  // Find first available variant (with stock)
   const getDefaultVariant = () => {
     if (!product.variants || product.variants.length === 0) return null;
-    
-    // Try to find first variant with stock > 0
     const availableVariant = product.variants.find(v => (v.stock || 0) > 0);
-    
-    // If found, use it. Otherwise use first variant (will show out of stock)
     return availableVariant || product.variants[0];
   };
 
@@ -31,16 +26,10 @@ const ProductCard = ({ product, onClick }) => {
     ? Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100) 
     : 0;
   
-  // Stock check
   const stock = selectedVariant.stock || 0;
   const isOutOfStock = stock === 0;
   const isLowStock = stock > 0 && stock <= 5;
-  
-  // Check if ANY variant is available
   const hasAnyStock = product.variants.some(v => (v.stock || 0) > 0);
-  const totalStock = product.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
-  
-  // Multiple variants?
   const hasMultipleVariants = product.variants.length > 1;
   const availableVariants = product.variants.filter(v => (v.stock || 0) > 0);
   const hasOtherSizesAvailable = availableVariants.length > 1 || 
@@ -68,19 +57,22 @@ const ProductCard = ({ product, onClick }) => {
       </div>
       
       <div className="product-info">
+        {/* Product Name - Only ONCE */}
         <div className="product-name" onClick={onClick}>{product.name}</div>
-        <div className="product-name" onClick={onClick}>{product.name}</div>
-{product.shopOwner && <div className="product-shop">by {product.shopOwner}</div>}
-
-{/* SHORT DESCRIPTION - NEW! */}
-{product.description && product.description.trim() && (
-  <div className="product-short-desc" onClick={onClick}>
-    {product.description}
-  </div>
-)}
-        {product.shopOwner && <div className="product-shop">by {product.shopOwner}</div>}
         
-        {/* SIZE SELECTOR (Multiple variants) */}
+        {/* Shop Owner - Only ONCE */}
+        {product.shopOwner && (
+          <div className="product-shop">by {product.shopOwner}</div>
+        )}
+        
+        {/* Description - Only ONCE */}
+        {product.description && product.description.trim() && (
+          <div className="product-short-desc" onClick={onClick}>
+            {product.description}
+          </div>
+        )}
+        
+        {/* Size Selector */}
         {hasMultipleVariants && (
           <div className="size-selector">
             {product.variants.map((v, i) => {
@@ -109,16 +101,17 @@ const ProductCard = ({ product, onClick }) => {
           </div>
         )}
         
+        {/* Price */}
         <div className="product-price-row">
           <span className="product-price">₹{selectedVariant.price}</span>
           {hasDiscount && <span className="product-original-price">₹{selectedVariant.originalPrice}</span>}
         </div>
 
-        {/* STOCK STATUS */}
+        {/* Stock Status */}
         <div className="product-stock-info">
           {isOutOfStock ? (
             hasOtherSizesAvailable ? (
-              <span className="stock-out">❌ Size not available - Choose other size</span>
+              <span className="stock-out">❌ Size not available</span>
             ) : (
               <span className="stock-out">❌ Out of Stock</span>
             )
@@ -129,6 +122,7 @@ const ProductCard = ({ product, onClick }) => {
           )}
         </div>
 
+        {/* Add to Cart Button */}
         {!hasAnyStock ? (
           <button className="product-notify-btn" disabled>
             Out of Stock
