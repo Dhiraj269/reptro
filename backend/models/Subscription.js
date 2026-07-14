@@ -4,7 +4,7 @@ const attendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
   status: { 
     type: String, 
-    enum: ['pending', 'delivered', 'skipped', 'holiday'], 
+    enum: ['pending', 'delivered', 'skipped', 'holiday', 'missed'], 
     default: 'pending' 
   },
   markedAt: { type: Date, default: null },
@@ -36,7 +36,9 @@ const subscriptionSchema = new mongoose.Schema({
   notes: { type: String, default: '' }
 }, { timestamps: true });
 
+// Only run pre-save for NEW subscriptions
 subscriptionSchema.pre('save', function(next) {
+  // Only for new documents - create attendance array
   if (this.isNew && this.attendance.length === 0) {
     const startDate = new Date(this.startDate);
     const attendanceArray = [];
@@ -58,12 +60,12 @@ subscriptionSchema.pre('save', function(next) {
     this.endDate = endDate;
     this.totalSavings = (this.singleBowlPrice * this.totalDays) - this.monthlyPrice;
   }
-  this.deliveredCount = this.attendance.filter(a => a.status === 'delivered').length;
-  this.skippedCount = this.attendance.filter(a => a.status === 'skipped').length;
-  this.pendingCount = this.attendance.filter(a => a.status === 'pending').length;
+  
+  // Auto-expire check
   if (new Date() > new Date(this.endDate) && this.status === 'active') {
     this.status = 'expired';
   }
+  
   next();
 });
 

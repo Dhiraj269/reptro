@@ -20,6 +20,7 @@ const AdminPanel = () => {
 const [freshItemsAdmin, setFreshItemsAdmin] = useState([]);
 const [showSubForm, setShowSubForm] = useState(false);
 const [selectedSubForAttendance, setSelectedSubForAttendance] = useState(null);
+const [selectedDayIndex, setSelectedDayIndex] = useState(null);
 const [subForm, setSubForm] = useState({
   userId: '',
   freshItemId: '',
@@ -363,12 +364,24 @@ const handleSubStatus = async (id, status) => {
 
 const handleMarkAttendance = async (subId, dateIndex, status) => {
   try {
-    await subscriptionAPI.markAttendance(subId, dateIndex, { status });
-    toast.success(`Marked as ${status}`);
-    const updated = await subscriptionAPI.getDetails(subId);
-    setSelectedSubForAttendance(updated.data);
-    fetchData();
-  } catch (error) { toast.error('Failed'); }
+    console.log('Marking attendance:', { subId, dateIndex, status });
+    
+    const { data } = await subscriptionAPI.markAttendance(subId, dateIndex, { status });
+    
+    if (data.success) {
+      toast.success(`Day ${dateIndex + 1} marked as ${status}`);
+      
+      // Refresh selected subscription with updated data
+      const updated = await subscriptionAPI.getDetails(subId);
+      setSelectedSubForAttendance(updated.data);
+      
+      // Refresh full list
+      fetchData();
+    }
+  } catch (error) {
+    console.error('Mark attendance error:', error);
+    toast.error(error.response?.data?.message || 'Failed to update');
+  }
 };
 
 const handleBulkAttendance = async () => {
@@ -1009,44 +1022,324 @@ const handleDeleteSubscription = async (id) => {
     </div>
 
     {selectedSubForAttendance && (
-      <div className="modal-overlay" onClick={() => setSelectedSubForAttendance(null)} style={{ zIndex: 3000 }}>
-        <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 700, maxHeight: '90vh', overflow: 'auto' }}>
-          <button className="modal-close" onClick={() => setSelectedSubForAttendance(null)}><FiX /></button>
-          <h2 className="modal-title">📅 {selectedSubForAttendance.itemName}</h2>
-          <p className="modal-subtitle">{selectedSubForAttendance.user?.name}</p>
+  <div className="modal-overlay" onClick={() => { setSelectedSubForAttendance(null); setSelectedDayIndex(null); }} style={{ zIndex: 3000 }}>
+    <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 750, maxHeight: '90vh', overflow: 'auto' }}>
+      <button className="modal-close" onClick={() => { setSelectedSubForAttendance(null); setSelectedDayIndex(null); }}><FiX /></button>
+      
+      <h2 className="modal-title">📅 {selectedSubForAttendance.itemName}</h2>
+      <p className="modal-subtitle">
+        {selectedSubForAttendance.user?.name} • {selectedSubForAttendance.user?.phone}
+      </p>
 
-          <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
-            Click any day to mark attendance:
+      {/* Stats Summary */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)', 
+        padding: 14, 
+        borderRadius: 12, 
+        marginBottom: 16,
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 8
+      }}>
+        <div style={{ textAlign: 'center', padding: 8, background: '#fff', borderRadius: 8 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#16a34a' }}>
+            {selectedSubForAttendance.deliveredCount || 0}
+          </div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#065f46' }}>DELIVERED</div>
+        </div>
+        <div style={{ textAlign: 'center', padding: 8, background: '#fff', borderRadius: 8 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>
+            {selectedSubForAttendance.skippedCount || 0}
+          </div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#92400e' }}>SKIPPED</div>
+        </div>
+        <div style={{ textAlign: 'center', padding: 8, background: '#fff', borderRadius: 8 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: '#3b82f6' }}>
+            {selectedSubForAttendance.pendingCount || 0}
+          </div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#1e40af' }}>PENDING</div>
+        </div>
+      </div>
+
+      <div style={{ 
+        marginBottom: 12, 
+        padding: '10px 12px',
+        background: '#fef3c7',
+        border: '1px solid #fcd34d',
+        borderRadius: 8,
+        fontSize: 12, 
+        color: '#78350f',
+        fontWeight: 600
+      }}>
+        💡 Click any day to change its status
+      </div>
+
+      {/* Days Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
+        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+          <div key={i} style={{ 
+            textAlign: 'center', 
+            fontSize: 10, 
+            fontWeight: 700, 
+            color: 'var(--text-secondary)', 
+            padding: 4
+          }}>
+            {d}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        {selectedSubForAttendance.attendance?.map((day, idx) => {
+          const dayDate = new Date(day.date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const isPast = dayDate < today;
+          const isToday = dayDate.toDateString() === today.toDateString();
+          
+          const bg = day.status === 'delivered' ? '#22c55e' : 
+                     day.status === 'skipped' ? '#f59e0b' : 
+                     day.status === 'holiday' ? '#8b5cf6' : 
+                     day.status === 'missed' ? '#ef4444' :
+                     isToday ? '#3b82f6' : 
+                     isPast ? '#ef4444' : '#f1f5f9';
+          
+          const color = day.status === 'pending' && !isToday && !isPast ? '#64748b' : '#fff';
+          
+          return (
+            <div 
+              key={idx} 
+              onClick={() => setSelectedDayIndex(idx)}
+              style={{ 
+                background: bg, 
+                color: color, 
+                borderRadius: 8, 
+                padding: 8, 
+                textAlign: 'center', 
+                cursor: 'pointer', 
+                minHeight: 75, 
+                fontSize: 10, 
+                fontWeight: 700,
+                border: selectedDayIndex === idx ? '3px solid var(--accent)' : 'none',
+                transition: 'all 0.2s',
+                position: 'relative'
+              }}
+            >
+              <div>Day {idx + 1}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, marginTop: 2 }}>
+                {dayDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+              </div>
+              {day.status === 'delivered' && <div style={{ fontSize: 14, marginTop: 2 }}>✓</div>}
+              {day.status === 'skipped' && <div style={{ fontSize: 14, marginTop: 2 }}>⏭</div>}
+              {day.status === 'holiday' && <div style={{ fontSize: 14, marginTop: 2 }}>🏖</div>}
+              {day.status === 'missed' && <div style={{ fontSize: 14, marginTop: 2 }}>✗</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Status Change Buttons - Show when day is selected */}
+      {selectedDayIndex !== null && (
+        <div style={{
+          marginTop: 20,
+          padding: 16,
+          background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+          border: '2px solid var(--accent)',
+          borderRadius: 12,
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          <div style={{ 
+            marginBottom: 12, 
+            fontSize: 13, 
+            fontWeight: 800, 
+            color: 'var(--primary)',
+            textAlign: 'center'
+          }}>
+            📌 Day {selectedDayIndex + 1} - {new Date(selectedSubForAttendance.attendance[selectedDayIndex].date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+          </div>
+          
+          <div style={{
+            marginBottom: 12,
+            textAlign: 'center',
+            fontSize: 11,
+            color: 'var(--text-secondary)'
+          }}>
+            Current Status: <strong style={{ textTransform: 'uppercase' }}>{selectedSubForAttendance.attendance[selectedDayIndex].status}</strong>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
-            {selectedSubForAttendance.attendance?.map((day, idx) => {
-              const dayDate = new Date(day.date);
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const isPast = dayDate < today;
-              const isToday = dayDate.toDateString() === today.toDateString();
-              const bg = day.status === 'delivered' ? '#22c55e' : day.status === 'skipped' ? '#f59e0b' : day.status === 'holiday' ? '#8b5cf6' : isToday ? '#3b82f6' : isPast ? '#ef4444' : '#f1f5f9';
-              const color = day.status === 'pending' && !isToday && !isPast ? '#64748b' : '#fff';
-              return (
-                <div key={idx} style={{ background: bg, color: color, borderRadius: 8, padding: 8, textAlign: 'center', cursor: 'pointer', minHeight: 70, fontSize: 10, fontWeight: 700 }} onClick={() => {
-                  const newStatus = prompt(`Day ${idx + 1}\nEnter:\n1 = delivered\n2 = skipped\n3 = holiday\n4 = pending`, '1');
-                  if (newStatus) {
-                    const map = { '1': 'delivered', '2': 'skipped', '3': 'holiday', '4': 'pending' };
-                    if (map[newStatus]) handleMarkAttendance(selectedSubForAttendance._id, idx, map[newStatus]);
-                  }
-                }}>
-                  <div>Day {idx + 1}</div>
-                  <div style={{ fontSize: 11, fontWeight: 800, marginTop: 2 }}>{dayDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
-                  {day.status === 'delivered' && <div>✓</div>}
-                  {day.status === 'skipped' && <div>⏭</div>}
-                </div>
-              );
-            })}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+            <button
+              onClick={() => {
+                handleMarkAttendance(selectedSubForAttendance._id, selectedDayIndex, 'delivered');
+                setSelectedDayIndex(null);
+              }}
+              style={{
+                padding: 12,
+                background: '#22c55e',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'all 0.2s'
+              }}
+            >
+              ✓ Delivered
+            </button>
+            
+            <button
+              onClick={() => {
+                handleMarkAttendance(selectedSubForAttendance._id, selectedDayIndex, 'skipped');
+                setSelectedDayIndex(null);
+              }}
+              style={{
+                padding: 12,
+                background: '#f59e0b',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
+              }}
+            >
+              ⏭ Skipped
+            </button>
+            
+            <button
+              onClick={() => {
+                handleMarkAttendance(selectedSubForAttendance._id, selectedDayIndex, 'holiday');
+                setSelectedDayIndex(null);
+              }}
+              style={{
+                padding: 12,
+                background: '#8b5cf6',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
+              }}
+            >
+              🏖 Holiday
+            </button>
+            
+            <button
+              onClick={() => {
+                handleMarkAttendance(selectedSubForAttendance._id, selectedDayIndex, 'missed');
+                setSelectedDayIndex(null);
+              }}
+              style={{
+                padding: 12,
+                background: '#ef4444',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
+              }}
+            >
+              ✗ Missed
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              handleMarkAttendance(selectedSubForAttendance._id, selectedDayIndex, 'pending');
+              setSelectedDayIndex(null);
+            }}
+            style={{
+              width: '100%',
+              padding: 10,
+              marginTop: 8,
+              background: '#f1f5f9',
+              color: '#475569',
+              border: '2px solid #cbd5e1',
+              borderRadius: 8,
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            🔄 Reset to Pending
+          </button>
+
+          <button
+            onClick={() => setSelectedDayIndex(null)}
+            style={{
+              width: '100%',
+              padding: 8,
+              marginTop: 8,
+              background: 'none',
+              color: 'var(--text-secondary)',
+              border: 'none',
+              fontSize: 11,
+              cursor: 'pointer'
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Legend */}
+      <div style={{ 
+        marginTop: 16, 
+        padding: 12, 
+        background: '#f8fafc', 
+        borderRadius: 8, 
+        fontSize: 11
+      }}>
+        <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--text-primary)' }}>Legend:</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#22c55e', borderRadius: 3 }} />
+            <span>Delivered</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#3b82f6', borderRadius: 3 }} />
+            <span>Today</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#f59e0b', borderRadius: 3 }} />
+            <span>Skipped</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#8b5cf6', borderRadius: 3 }} />
+            <span>Holiday</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#ef4444', borderRadius: 3 }} />
+            <span>Missed</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, background: '#f1f5f9', borderRadius: 3, border: '1px solid #cbd5e1' }} />
+            <span>Pending</span>
           </div>
         </div>
       </div>
-    )}
+    </div>
+  </div>
+)}
   </div>
 )}
      {activeTab === 'users' && (
