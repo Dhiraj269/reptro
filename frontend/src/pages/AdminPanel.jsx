@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiPlus, FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
-import { adminAPI, productAPI, categoryAPI, orderAPI, locationAPI, uploadAPI, reptroFreshAPI } from '../utils/api';
+import { adminAPI, productAPI, categoryAPI, orderAPI, locationAPI, uploadAPI, reptroFreshAPI, subscriptionAPI } from '../utils/api';
 import toast from 'react-hot-toast';
 
 const AdminPanel = () => {
@@ -16,6 +16,17 @@ const AdminPanel = () => {
   const [locations, setLocations] = useState([]);
   const [users, setUsers] = useState([]);
   const [freshItems, setFreshItems] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
+const [freshItemsAdmin, setFreshItemsAdmin] = useState([]);
+const [showSubForm, setShowSubForm] = useState(false);
+const [selectedSubForAttendance, setSelectedSubForAttendance] = useState(null);
+const [subForm, setSubForm] = useState({
+  userId: '',
+  freshItemId: '',
+  startDate: new Date().toISOString().split('T')[0],
+  paymentMethod: 'cod',
+  notes: ''
+});
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [newLocationName, setNewLocationName] = useState('');
@@ -80,6 +91,7 @@ const [categoryForm, setCategoryForm] = useState({
       const { data } = await locationAPI.getAll();
       setLocations(data);
     }
+    
     if (activeTab === 'users') {
       const { data } = await adminAPI.getUsers();
       setUsers(data);
@@ -100,6 +112,14 @@ const [categoryForm, setCategoryForm] = useState({
         }
       }
     }
+    if (activeTab === 'subscriptions') {
+  const subRes = await subscriptionAPI.getAllAdmin();
+  setSubscriptions(subRes.data);
+  const usersRes = await adminAPI.getUsers();
+  setUsers(usersRes.data);
+  const freshRes = await reptroFreshAPI.getAllAdmin();
+  setFreshItemsAdmin(freshRes.data);
+}
   } catch (e) {
     console.error('Fetch error:', e);
   }
@@ -319,9 +339,57 @@ const handleToggleCategory = async (id) => {
     toast.error('Failed to update');
   }
 };
+// Subscription handlers
+const handleCreateSubscription = async (e) => {
+  e.preventDefault();
+  try {
+    await subscriptionAPI.create(subForm);
+    toast.success('Subscription activated!');
+    setShowSubForm(false);
+    setSubForm({ userId: '', freshItemId: '', startDate: new Date().toISOString().split('T')[0], paymentMethod: 'cod', notes: '' });
+    fetchData();
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Failed');
+  }
+};
 
+const handleSubStatus = async (id, status) => {
+  try {
+    await subscriptionAPI.updateStatus(id, status);
+    toast.success('Updated!');
+    fetchData();
+  } catch (error) { toast.error('Failed'); }
+};
+
+const handleMarkAttendance = async (subId, dateIndex, status) => {
+  try {
+    await subscriptionAPI.markAttendance(subId, dateIndex, { status });
+    toast.success(`Marked as ${status}`);
+    const updated = await subscriptionAPI.getDetails(subId);
+    setSelectedSubForAttendance(updated.data);
+    fetchData();
+  } catch (error) { toast.error('Failed'); }
+};
+
+const handleBulkAttendance = async () => {
+  if (!window.confirm('Mark today as DELIVERED for all active subscriptions?')) return;
+  try {
+    const { data } = await subscriptionAPI.bulkAttendance('delivered');
+    toast.success(`${data.count} marked!`);
+    fetchData();
+  } catch (error) { toast.error('Failed'); }
+};
+
+const handleDeleteSubscription = async (id) => {
+  if (!window.confirm('Delete this subscription?')) return;
+  try {
+    await subscriptionAPI.delete(id);
+    toast.success('Deleted!');
+    fetchData();
+  } catch (error) { toast.error('Failed'); }
+};
   if (!user || user.role !== 'admin') return null;
-  const tabs = ['dashboard', 'products', 'reptrofresh', 'orders', 'categories', 'locations', 'users'];
+  const tabs = ['dashboard', 'products', 'reptrofresh', 'subscriptions', 'orders', 'categories', 'locations', 'users'];
 
   return (
     <div className="admin-container">
@@ -829,7 +897,158 @@ const handleToggleCategory = async (id) => {
           </tbody></table></div></div>
         </div>
       )}
+{activeTab === 'subscriptions' && (
+  <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+      <h3 style={{ fontWeight: 700 }}>🌱 Subscriptions ({subscriptions.length})</h3>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="admin-btn admin-btn-success" onClick={handleBulkAttendance}>
+          ✓ Mark Today Delivered
+        </button>
+        <button className="admin-btn admin-btn-primary" onClick={() => setShowSubForm(true)}>
+          <FiPlus size={14} /> Activate
+        </button>
+      </div>
+    </div>
 
+    {showSubForm && (
+      <div className="admin-form" style={{ marginBottom: 24 }}>
+        <h3>🌱 Activate Subscription</h3>
+        <form onSubmit={handleCreateSubscription}>
+          <div className="admin-form-grid">
+            <div className="form-group">
+              <label>Select User *</label>
+              <select value={subForm.userId} onChange={e => setSubForm({...subForm, userId: e.target.value})} required style={{ width: '100%', padding: '12px 16px', border: '2px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 14 }}>
+                <option value="">Choose User</option>
+                {users.filter(u => u.role !== 'admin').map(u => (
+                  <option key={u._id} value={u._id}>{u.name} - {u.phone}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Select Fresh Item *</label>
+              <select value={subForm.freshItemId} onChange={e => setSubForm({...subForm, freshItemId: e.target.value})} required style={{ width: '100%', padding: '12px 16px', border: '2px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 14 }}>
+                <option value="">Choose Item</option>
+                {freshItemsAdmin.map(f => (
+                  <option key={f._id} value={f._id}>{f.type === 'sprout' ? '🌱' : '🍎'} {f.name} - ₹{f.monthlyPrice}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Start Date *</label>
+              <input type="date" value={subForm.startDate} onChange={e => setSubForm({...subForm, startDate: e.target.value})} required />
+            </div>
+            <div className="form-group">
+              <label>Payment</label>
+              <select value={subForm.paymentMethod} onChange={e => setSubForm({...subForm, paymentMethod: e.target.value})} style={{ width: '100%', padding: '12px 16px', border: '2px solid var(--border)', borderRadius: 'var(--radius)', fontSize: 14 }}>
+                <option value="cod">COD</option>
+                <option value="upi">UPI</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <button type="submit" className="admin-btn admin-btn-primary" style={{ padding: '12px 24px' }}>Activate</button>
+            <button type="button" className="admin-btn" style={{ padding: '12px 24px', background: 'var(--bg-secondary)' }} onClick={() => setShowSubForm(false)}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    )}
+
+    <div className="admin-table">
+      <div className="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Item</th>
+              <th>Dates</th>
+              <th>Progress</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {subscriptions.map(sub => (
+              <tr key={sub._id}>
+                <td>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{sub.user?.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>{sub.user?.phone}</div>
+                </td>
+                <td style={{ fontSize: 12, fontWeight: 600 }}>
+                  {sub.itemType === 'sprout' ? '🌱' : '🍎'} {sub.itemName}
+                </td>
+                <td style={{ fontSize: 10 }}>
+                  {new Date(sub.startDate).toLocaleDateString('en-IN')}<br/>
+                  to {new Date(sub.endDate).toLocaleDateString('en-IN')}
+                </td>
+                <td>
+                  <div style={{ fontSize: 11 }}>{sub.deliveredCount}/{sub.totalDays}</div>
+                  <div style={{ background: '#e5e7eb', height: 4, borderRadius: 2, minWidth: 60 }}>
+                    <div style={{ background: '#22c55e', height: '100%', width: `${Math.round((sub.deliveredCount/sub.totalDays)*100)}%` }} />
+                  </div>
+                </td>
+                <td>
+                  <select value={sub.status} onChange={e => handleSubStatus(sub._id, e.target.value)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', fontSize: 11 }}>
+                    <option value="active">Active</option>
+                    <option value="paused">Paused</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => setSelectedSubForAttendance(sub)}>📅</button>
+                    <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => handleDeleteSubscription(sub._id)}><FiTrash2 size={12} /></button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {selectedSubForAttendance && (
+      <div className="modal-overlay" onClick={() => setSelectedSubForAttendance(null)} style={{ zIndex: 3000 }}>
+        <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 700, maxHeight: '90vh', overflow: 'auto' }}>
+          <button className="modal-close" onClick={() => setSelectedSubForAttendance(null)}><FiX /></button>
+          <h2 className="modal-title">📅 {selectedSubForAttendance.itemName}</h2>
+          <p className="modal-subtitle">{selectedSubForAttendance.user?.name}</p>
+
+          <div style={{ marginBottom: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
+            Click any day to mark attendance:
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+            {selectedSubForAttendance.attendance?.map((day, idx) => {
+              const dayDate = new Date(day.date);
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const isPast = dayDate < today;
+              const isToday = dayDate.toDateString() === today.toDateString();
+              const bg = day.status === 'delivered' ? '#22c55e' : day.status === 'skipped' ? '#f59e0b' : day.status === 'holiday' ? '#8b5cf6' : isToday ? '#3b82f6' : isPast ? '#ef4444' : '#f1f5f9';
+              const color = day.status === 'pending' && !isToday && !isPast ? '#64748b' : '#fff';
+              return (
+                <div key={idx} style={{ background: bg, color: color, borderRadius: 8, padding: 8, textAlign: 'center', cursor: 'pointer', minHeight: 70, fontSize: 10, fontWeight: 700 }} onClick={() => {
+                  const newStatus = prompt(`Day ${idx + 1}\nEnter:\n1 = delivered\n2 = skipped\n3 = holiday\n4 = pending`, '1');
+                  if (newStatus) {
+                    const map = { '1': 'delivered', '2': 'skipped', '3': 'holiday', '4': 'pending' };
+                    if (map[newStatus]) handleMarkAttendance(selectedSubForAttendance._id, idx, map[newStatus]);
+                  }
+                }}>
+                  <div>Day {idx + 1}</div>
+                  <div style={{ fontSize: 11, fontWeight: 800, marginTop: 2 }}>{dayDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                  {day.status === 'delivered' && <div>✓</div>}
+                  {day.status === 'skipped' && <div>⏭</div>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+)}
      {activeTab === 'users' && (
   <div className="admin-table">
     <div className="table-responsive">

@@ -46,6 +46,7 @@ app.use('/api/locations', require('./routes/locations'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/upload', require('./routes/upload'));
 app.use('/api/reptrofresh', require('./routes/reptrofresh'));
+app.use('/api/subscriptions', require('./routes/subscriptions'));
 
 // Seed route (remove after using)
 app.get('/api/seed-database-secret-2024', async (req, res) => {

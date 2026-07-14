@@ -67,7 +67,17 @@ export const adminAPI = {
   getUsers: () => api.get('/admin/users'),
   toggleUser: (id) => api.put('/admin/users/' + id + '/toggle')
 };
-
+export const subscriptionAPI = {
+  getMySubscriptions: () => api.get('/subscriptions/my-subscriptions'),
+  getMySubscription: (id) => api.get('/subscriptions/my-subscription/' + id),
+  getAllAdmin: () => api.get('/subscriptions/all'),
+  getDetails: (id) => api.get('/subscriptions/details/' + id),
+  create: (data) => api.post('/subscriptions/create', data),
+  updateStatus: (id, status) => api.put('/subscriptions/' + id + '/status', { status }),
+  markAttendance: (id, dateIndex, data) => api.put('/subscriptions/' + id + '/attendance/' + dateIndex, data),
+  bulkAttendance: (status) => api.post('/subscriptions/bulk-attendance', { status }),
+  delete: (id) => api.delete('/subscriptions/' + id)
+};
 export const uploadAPI = {
   upload: (formData) => api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
 };
