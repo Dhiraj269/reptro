@@ -6,6 +6,13 @@ const ReptroFresh = require('../models/ReptroFresh');
 const { protect } = require('../middleware/auth');
 const { admin } = require('../middleware/admin');
 
+// Helper function for IST date
+function getISTDateString(date) {
+  const d = new Date(date);
+  const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+  return istDate.toISOString().split('T')[0];
+}
+
 // USER ROUTES
 router.get('/my-subscriptions', protect, async (req, res) => {
   try {
@@ -63,8 +70,25 @@ router.post('/create', protect, admin, async (req, res) => {
     });
     if (existingActive) return res.status(400).json({ message: 'Active subscription exists' });
     
-    const start = startDate ? new Date(startDate) : new Date();
-    start.setHours(0, 0, 0, 0);
+    // Parse date in IST properly
+    let startDateObj;
+    if (startDate) {
+      // Input format: YYYY-MM-DD
+      const [year, month, day] = startDate.split('-').map(Number);
+      // Create UTC date at start of day IST
+      startDateObj = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+    } else {
+      // Use today in IST
+      const now = new Date();
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const istNow = new Date(now.getTime() + istOffset);
+      startDateObj = new Date(Date.UTC(
+        istNow.getUTCFullYear(),
+        istNow.getUTCMonth(),
+        istNow.getUTCDate(),
+        0, 0, 0
+      ));
+    }
     
     const subscription = new Subscription({
       user: userId,
@@ -74,8 +98,8 @@ router.post('/create', protect, admin, async (req, res) => {
       bowlSize: freshItem.bowlSize,
       monthlyPrice: freshItem.monthlyPrice,
       singleBowlPrice: freshItem.singleBowlPrice,
-      startDate: start,
-      endDate: new Date(start.getTime() + 27 * 24 * 60 * 60 * 1000),
+      startDate: startDateObj,
+      endDate: new Date(startDateObj.getTime() + 27 * 24 * 60 * 60 * 1000),
       totalDays: 28,
       status: 'active',
       paymentMethod: paymentMethod || 'cod',
@@ -103,18 +127,14 @@ router.put('/:id/status', protect, admin, async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
-// FIXED ATTENDANCE UPDATE ROUTE
 router.put('/:id/attendance/:dateIndex', protect, admin, async (req, res) => {
   try {
     const { status, notes } = req.body;
     const { id, dateIndex } = req.params;
     
-    // Validate status
     const validStatuses = ['pending', 'delivered', 'skipped', 'holiday', 'missed'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        message: 'Invalid status. Must be: ' + validStatuses.join(', ')
-      });
+      return res.status(400).json({ message: 'Invalid status' });
     }
     
     const subscription = await Subscription.findById(id);
@@ -127,29 +147,18 @@ router.put('/:id/attendance/:dateIndex', protect, admin, async (req, res) => {
       return res.status(400).json({ message: 'Invalid date index' });
     }
     
-    // Update attendance
     subscription.attendance[index].status = status;
     subscription.attendance[index].markedAt = new Date();
     subscription.attendance[index].markedBy = req.user.name || 'Admin';
     subscription.attendance[index].notes = notes || '';
     
-    // Mark modified for nested array
     subscription.markModified('attendance');
     
-    // Recalculate counts manually
     subscription.deliveredCount = subscription.attendance.filter(a => a.status === 'delivered').length;
     subscription.skippedCount = subscription.attendance.filter(a => a.status === 'skipped').length;
     subscription.pendingCount = subscription.attendance.filter(a => a.status === 'pending').length;
     
     await subscription.save();
-    
-    console.log('✅ Attendance updated:', {
-      subId: id,
-      day: index + 1,
-      status: status,
-      delivered: subscription.deliveredCount,
-      skipped: subscription.skippedCount
-    });
     
     res.json({ 
       success: true, 
@@ -165,17 +174,13 @@ router.put('/:id/attendance/:dateIndex', protect, admin, async (req, res) => {
 router.post('/bulk-attendance', protect, admin, async (req, res) => {
   try {
     const { status } = req.body;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const todayIST = getISTDateString(new Date());
+    
     const activeSubs = await Subscription.find({ status: 'active' });
     let updated = 0;
     
     for (const sub of activeSubs) {
-      const todayIndex = sub.attendance.findIndex(a => {
-        const attDate = new Date(a.date);
-        attDate.setHours(0, 0, 0, 0);
-        return attDate.getTime() === today.getTime();
-      });
+      const todayIndex = sub.attendance.findIndex(a => a.dateString === todayIST);
       
       if (todayIndex !== -1 && sub.attendance[todayIndex].status === 'pending') {
         sub.attendance[todayIndex].status = status || 'delivered';

@@ -3754,3 +3754,782 @@ bar-logo {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* ==========================================
+   COMPLETE ANIMATION SYSTEM
+   ========================================== */
+
+/* Base Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes fadeInDown {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes fadeInLeft {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes fadeInRight {
+  from { 
+    opacity: 0; 
+    transform: translateX(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes fadeInScale {
+  from { 
+    opacity: 0; 
+    transform: scale(0.9); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes popIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.5); 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes bounceIn {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.3); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.05); 
+  }
+  70% { 
+    transform: scale(0.9); 
+  }
+  100% { 
+    transform: scale(1); 
+  }
+}
+
+@keyframes rotateIn {
+  from { 
+    opacity: 0; 
+    transform: rotate(-200deg); 
+  }
+  to { 
+    opacity: 1; 
+    transform: rotate(0); 
+  }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(232, 123, 53, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(232, 123, 53, 0.8);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes progressShimmer {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes heartBeat {
+  0%, 100% { transform: scale(1); }
+  15% { transform: scale(1.2); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.15); }
+  60% { transform: scale(1); }
+}
+
+@keyframes badgePulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(34, 197, 94, 0.5);
+  }
+}
+
+@keyframes cardHover {
+  from { transform: translateY(0); }
+  to { transform: translateY(-4px); }
+}
+
+@keyframes buttonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes ripple {
+  0% { 
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% { 
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes success {
+  0% { transform: scale(0) rotate(0deg); }
+  50% { transform: scale(1.2) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+/* Utility Animation Classes */
+.animate-fade-in { animation: fadeIn 0.4s ease; }
+.animate-fade-in-up { animation: fadeInUp 0.5s ease; }
+.animate-fade-in-down { animation: fadeInDown 0.5s ease; }
+.animate-fade-in-left { animation: fadeInLeft 0.5s ease; }
+.animate-fade-in-right { animation: fadeInRight 0.5s ease; }
+.animate-fade-in-scale { animation: fadeInScale 0.4s ease; }
+.animate-slide-up { animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.animate-slide-in-left { animation: fadeInLeft 0.5s ease; }
+.animate-slide-in-right { animation: fadeInRight 0.5s ease; }
+.animate-pop-in { animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+.animate-bounce-in { animation: bounceIn 0.6s ease; }
+.animate-pulse { animation: pulse 2s infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* Apply Animations to Existing Elements */
+
+/* Product Cards */
+.product-card {
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.product-card:nth-child(1) { animation-delay: 0.05s; }
+.product-card:nth-child(2) { animation-delay: 0.1s; }
+.product-card:nth-child(3) { animation-delay: 0.15s; }
+.product-card:nth-child(4) { animation-delay: 0.2s; }
+.product-card:nth-child(5) { animation-delay: 0.25s; }
+.product-card:nth-child(6) { animation-delay: 0.3s; }
+
+.product-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card .product-image {
+  transition: transform 0.5s ease;
+}
+
+.product-card:hover .product-image {
+  transform: scale(1.1);
+}
+
+/* Category Cards */
+.category-card {
+  animation: fadeInScale 0.5s ease backwards;
+}
+
+.category-card:nth-child(1) { animation-delay: 0.1s; }
+.category-card:nth-child(2) { animation-delay: 0.15s; }
+.category-card:nth-child(3) { animation-delay: 0.2s; }
+.category-card:nth-child(4) { animation-delay: 0.25s; }
+
+.category-card:hover .category-icon-box {
+  animation: wiggle 0.5s ease;
+}
+
+/* Buttons - Hover Effects */
+.product-add-btn,
+.hero-btn,
+.modal-add-btn,
+.cart-checkout-btn,
+.form-submit-btn,
+.admin-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-add-btn:hover,
+.hero-btn:hover,
+.admin-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.product-add-btn:active,
+.hero-btn:active,
+.admin-btn:active {
+  transform: translateY(0);
+  animation: buttonPress 0.2s ease;
+}
+
+/* Ripple effect on buttons */
+.product-add-btn::before,
+.hero-btn-primary::before,
+.cart-checkout-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.product-add-btn:active::before,
+.hero-btn-primary:active::before,
+.cart-checkout-btn:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* Hero Section */
+.hero-section {
+  animation: fadeIn 0.8s ease;
+}
+
+.hero-badge {
+  animation: fadeInDown 0.6s ease;
+}
+
+.hero-title {
+  animation: fadeInUp 0.8s ease 0.2s backwards;
+}
+
+.hero-subtitle {
+  animation: fadeInUp 0.8s ease 0.3s backwards;
+}
+
+.hero-tags {
+  animation: fadeInUp 0.8s ease 0.4s backwards;
+}
+
+.hero-buttons {
+  animation: fadeInUp 0.8s ease 0.5s backwards;
+}
+
+.hero-phone {
+  animation: fadeInUp 0.8s ease 0.6s backwards;
+}
+
+/* Navbar */
+.navbar {
+  animation: fadeInDown 0.5s ease;
+}
+
+.navbar-logo-icon {
+  transition: transform 0.3s ease;
+}
+
+.navbar-logo:hover .navbar-logo-icon {
+  transform: rotate(5deg) scale(1.05);
+}
+
+.nav-btn {
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Cart Badge Animation */
+.cart-badge {
+  animation: bounceIn 0.5s ease;
+}
+
+/* Modal Animations */
+.modal-overlay {
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  animation: fadeInScale 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Dashboard Drawer */
+.dashboard-drawer {
+  animation: slideRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cart-drawer {
+  animation: slideLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Location Bar */
+.location-bar {
+  animation: fadeInDown 0.5s ease 0.2s backwards;
+}
+
+/* Section Headers */
+.section-header {
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Reptro Fresh Cards */
+.rf-premium-card,
+.rf-card {
+  animation: fadeInScale 0.5s ease backwards;
+}
+
+.rf-premium-card:nth-child(1) { animation-delay: 0.1s; }
+.rf-premium-card:nth-child(2) { animation-delay: 0.2s; }
+.rf-premium-card:nth-child(3) { animation-delay: 0.3s; }
+
+.rf-premium-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(34, 197, 94, 0.2);
+}
+
+/* Flash Sale */
+.flash-sale-section {
+  animation: fadeIn 0.6s ease;
+}
+
+.fs-timer .fs-time {
+  animation: pulse 1s infinite;
+}
+
+/* WhatsApp Float Button */
+.whatsapp-float {
+  animation: bounceIn 0.8s ease 1s backwards;
+}
+
+.whatsapp-float:hover {
+  animation: heartBeat 1s ease infinite;
+}
+
+/* Cart Items */
+.cart-item {
+  animation: fadeInLeft 0.4s ease;
+}
+
+/* Toast Notifications */
+[data-sonner-toast] {
+  animation: fadeInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Search Bar */
+.search-input-wrapper {
+  transition: all 0.3s ease;
+}
+
+.search-input-wrapper:focus-within {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(232, 123, 53, 0.15);
+}
+
+/* Search Suggestions */
+.search-suggestion-item {
+  animation: fadeInLeft 0.3s ease backwards;
+  transition: all 0.2s ease;
+}
+
+.search-suggestion-item:hover {
+  transform: translateX(4px);
+  background: #fff7ed;
+}
+
+/* Founders Section */
+.founder-fixed-card {
+  animation: fadeInUp 0.6s ease backwards;
+}
+
+.founder-fixed-card:nth-child(1) { animation-delay: 0.2s; }
+.founder-fixed-card:nth-child(2) { animation-delay: 0.4s; }
+
+.founder-fixed-card:hover {
+  transform: translateY(-6px) rotate(-1deg);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.founder-fixed-card:hover .founder-img {
+  animation: wiggle 0.5s ease;
+}
+
+/* Why Reptro Cards */
+.why-card {
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.why-card:hover .why-card-icon {
+  animation: rotateIn 0.6s ease;
+}
+
+/* Footer */
+.footer-new {
+  animation: fadeIn 0.8s ease;
+}
+
+.footer-social-btn {
+  transition: all 0.3s ease;
+}
+
+.footer-social-btn:hover {
+  transform: translateY(-4px) rotate(10deg);
+}
+
+/* Subscription Badge */
+.badge-pulse {
+  animation: badgePulse 2s infinite;
+}
+
+/* Today cell in attendance */
+.today-cell {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Loading Spinner */
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Size Buttons */
+.size-btn {
+  transition: all 0.2s ease;
+}
+
+.size-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.size-btn-active {
+  animation: popIn 0.3s ease;
+}
+
+/* Product Modal Image */
+.product-modal-image img {
+  animation: fadeInScale 0.5s ease;
+  transition: transform 0.3s ease;
+}
+
+.product-modal-image:hover img {
+  transform: scale(1.05);
+}
+
+/* Confirmation Modal */
+.confirm-modal-content {
+  animation: bounceIn 0.5s ease;
+}
+
+.confirm-modal-icon {
+  animation: heartBeat 1.5s ease infinite;
+}
+
+/* Success Modal */
+.success-icon-wrapper svg {
+  animation: success 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Popular Search Tags */
+.popular-search-tag {
+  transition: all 0.2s ease;
+}
+
+.popular-search-tag:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(232, 123, 53, 0.2);
+}
+
+/* Wishlist Heart */
+.product-wishlist {
+  transition: all 0.3s ease;
+}
+
+.product-wishlist:hover {
+  animation: heartBeat 0.6s ease;
+}
+
+/* Discount Badges */
+.product-badge {
+  animation: bounceIn 0.6s ease backwards;
+  animation-delay: 0.3s;
+}
+
+/* Stock Indicators */
+.stock-low {
+  animation: pulse 1.5s infinite;
+}
+
+/* Out of stock overlay */
+.out-of-stock-overlay {
+  animation: fadeInScale 0.4s ease;
+}
+
+/* Mobile Menu Items */
+.dashboard-menu-item {
+  animation: fadeInLeft 0.3s ease backwards;
+}
+
+.dashboard-menu-item:nth-child(1) { animation-delay: 0.05s; }
+.dashboard-menu-item:nth-child(2) { animation-delay: 0.1s; }
+.dashboard-menu-item:nth-child(3) { animation-delay: 0.15s; }
+.dashboard-menu-item:nth-child(4) { animation-delay: 0.2s; }
+.dashboard-menu-item:nth-child(5) { animation-delay: 0.25s; }
+.dashboard-menu-item:nth-child(6) { animation-delay: 0.3s; }
+
+.dashboard-menu-item:hover {
+  transform: translateX(4px);
+  background: var(--bg-secondary);
+}
+
+/* Table Rows */
+.admin-table tbody tr {
+  animation: fadeInLeft 0.3s ease backwards;
+  transition: all 0.2s ease;
+}
+
+.admin-table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+.admin-table tbody tr:nth-child(2) { animation-delay: 0.08s; }
+.admin-table tbody tr:nth-child(3) { animation-delay: 0.11s; }
+.admin-table tbody tr:nth-child(4) { animation-delay: 0.14s; }
+.admin-table tbody tr:nth-child(5) { animation-delay: 0.17s; }
+
+.admin-table tbody tr:hover {
+  transform: scale(1.005);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Stats Cards */
+.stat-card {
+  animation: fadeInScale 0.5s ease backwards;
+  transition: all 0.3s ease;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(26, 54, 93, 0.15);
+}
+
+.stat-value {
+  animation: countUp 1s ease;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Admin Tabs */
+.admin-tab {
+  transition: all 0.3s ease;
+}
+
+.admin-tab:hover:not(.active) {
+  transform: translateY(-2px);
+}
+
+.admin-tab.active {
+  animation: popIn 0.3s ease;
+}
+
+/* Login Modal Google Button */
+.modal-content [role="button"] {
+  transition: all 0.3s ease;
+}
+
+.modal-content [role="button"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Delivery Type Buttons */
+.delivery-type-btn {
+  transition: all 0.3s ease;
+}
+
+.delivery-type-btn:hover {
+  transform: translateY(-2px);
+}
+
+.delivery-type-btn.active {
+  animation: popIn 0.3s ease;
+}
+
+/* Payment Buttons */
+.payment-btn {
+  transition: all 0.3s ease;
+}
+
+.payment-btn:hover {
+  transform: translateY(-2px);
+}
+
+.payment-btn.active {
+  animation: popIn 0.3s ease;
+}
+
+/* Variant Items */
+.variant-item {
+  transition: all 0.3s ease;
+}
+
+.variant-item:hover:not(.variant-disabled) {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.variant-item.selected {
+  animation: popIn 0.3s ease;
+}
+
+/* Reduce animations on mobile for performance */
+@media (max-width: 768px) {
+  .product-card:hover,
+  .rf-premium-card:hover,
+  .founder-fixed-card:hover {
+    transform: none;
+  }
+  
+  .product-card,
+  .category-card,
+  .rf-premium-card {
+    animation-duration: 0.3s;
+  }
+}
+
+/* Respect user preferences for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Page transitions */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
+}
