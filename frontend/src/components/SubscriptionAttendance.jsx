@@ -205,18 +205,8 @@ const SubscriptionAttendance = ({ subscription, onClose }) => {
           borderRadius: 12, padding: 12, marginBottom: 12 
         }}>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <FiCalendar size={14} /> Attendance Sheet (IST)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
-            {dayNames.map((day, i) => (
-              <div key={i} style={{ 
-                textAlign: 'center', fontSize: 10, fontWeight: 700, 
-                color: 'var(--text-secondary)', padding: '4px 0' 
-              }}>
-                {day}
-              </div>
-            ))}
-          </div>
+  <FiCalendar size={14} /> Attendance Sheet
+</div>
           {weeks.map((week, weekIdx) => (
             <div key={weekIdx} style={{ 
               display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', 
