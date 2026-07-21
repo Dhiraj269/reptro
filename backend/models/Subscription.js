@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
   date: { type: Date, required: true },
-  dateString: { type: String, required: true }, // YYYY-MM-DD format
+  dateString: { type: String, default: '' }, // Made optional
   dayName: { type: String, default: '' },
-  dayNumber: { type: Number, required: true },
+  dayNumber: { type: Number, default: 0 }, // Made optional with default
   status: { 
     type: String, 
     enum: ['pending', 'delivered', 'skipped', 'holiday', 'missed'], 
@@ -41,12 +41,11 @@ const subscriptionSchema = new mongoose.Schema({
   notes: { type: String, default: '' }
 }, { timestamps: true });
 
-// Helper function to get IST date string
+// Helper functions
 function getISTDateString(date) {
   const d = new Date(date);
-  // Add 5:30 hours for IST
   const istDate = new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
-  return istDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  return istDate.toISOString().split('T')[0];
 }
 
 function getISTDayName(date) {
@@ -57,15 +56,13 @@ function getISTDayName(date) {
 }
 
 subscriptionSchema.pre('save', function(next) {
-  // Only for new documents
+  // Only for new documents - create attendance array
   if (this.isNew && this.attendance.length === 0) {
-    // Parse start date and set to IST midnight
     const startDateInput = new Date(this.startDate);
     const year = startDateInput.getFullYear();
     const month = startDateInput.getMonth();
     const day = startDateInput.getDate();
     
-    // Create date at IST midnight (00:00 IST = 18:30 UTC previous day)
     const startDate = new Date(Date.UTC(year, month, day, 0, 0, 0));
     
     const attendanceArray = [];
@@ -89,7 +86,6 @@ subscriptionSchema.pre('save', function(next) {
     this.startDate = startDate;
     this.startDateString = getISTDateString(startDate);
     
-    // End date = start + 27 days
     const endDate = new Date(startDate);
     endDate.setUTCDate(startDate.getUTCDate() + this.totalDays - 1);
     this.endDate = endDate;
@@ -98,7 +94,31 @@ subscriptionSchema.pre('save', function(next) {
     this.totalSavings = (this.singleBowlPrice * this.totalDays) - this.monthlyPrice;
   }
   
-  // Auto-expire check based on IST
+  // For existing documents - migrate missing fields
+  if (!this.isNew && this.attendance && this.attendance.length > 0) {
+    this.attendance.forEach((att, index) => {
+      // Add missing fields to old attendance records
+      if (!att.dateString) {
+        att.dateString = getISTDateString(att.date);
+      }
+      if (!att.dayName) {
+        att.dayName = getISTDayName(att.date);
+      }
+      if (!att.dayNumber) {
+        att.dayNumber = index + 1;
+      }
+    });
+    
+    // Add missing top-level fields
+    if (!this.startDateString) {
+      this.startDateString = getISTDateString(this.startDate);
+    }
+    if (!this.endDateString) {
+      this.endDateString = getISTDateString(this.endDate);
+    }
+  }
+  
+  // Auto-expire check
   const todayIST = getISTDateString(new Date());
   if (this.endDateString && todayIST > this.endDateString && this.status === 'active') {
     this.status = 'expired';
